@@ -15,6 +15,6 @@ Replaces my own [split_bam_by_chr](https://github.com/andreas-wilm/split_bam_by_
 
 # Compilation
 
-- You will have to set HTSDIR. 
+- You will have to set HTSLIBDIR. 
 - Default target is 'static'. The other valid target is 'dynamic'
-- Example: `HTSDIR=/opt/local/htslib-1.3/ make dynamic`
+- Example: `HTSLIBDIR=/opt/local/htslib-1.3/ make dynamic`
