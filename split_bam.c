@@ -88,11 +88,11 @@ int main(int argc, char *argv[])
     }
 
     if (! outprefix) {
-      fprintf(stderr, "Need output prefix\n");
+      fprintf(stderr, "FATAL: Need output prefix\n");
         return EXIT_FAILURE;
     }
     if (! bedfile) {
-      fprintf(stderr, "Need bed file\n");
+      fprintf(stderr, "FATAL: Need bed file\n");
         return EXIT_FAILURE;
     }
 
@@ -104,19 +104,24 @@ int main(int argc, char *argv[])
 
     in = sam_open(argv[optind], moder);
     if (in == NULL) {
-        fprintf(stderr, "Error opening \"%s\"\n", argv[optind]);
+        fprintf(stderr, "FATAL: Error opening \"%s\"\n", argv[optind]);
         return EXIT_FAILURE;
     }
     hdr = sam_hdr_read(in);
     if (hdr == NULL) {
-        fprintf(stderr, "Couldn't read header for \"%s\"\n", argv[optind]);
+        fprintf(stderr, "FATAL: couldn't read header for \"%s\"\n", argv[optind]);
         return EXIT_FAILURE;
     }
+    if (hdr->n_targets == 0) {
+        fprintf(stderr, "FATAL: no sequences found in header\n");
+        return EXIT_FAILURE;
+    }
+
     hdr->ignore_sam_err = ignore_sam_err;
     if (extra_hdr_nuls) {
         char *new_text = realloc(hdr->text, hdr->l_text + extra_hdr_nuls);
         if (new_text == NULL) {
-            fprintf(stderr, "Error reallocing header text\n");
+            fprintf(stderr, "FATAL: error reallocing header text\n");
             return EXIT_FAILURE;
         }
         hdr->text = new_text;
@@ -130,7 +135,7 @@ int main(int argc, char *argv[])
     assert(bedfile);
     bedregions = parseBED(bedfile, hdr);
     if (! bedregions) {
-      fprintf(stderr, "Error parsing of %s failed\n", bedfile);
+      fprintf(stderr, "FATAL: error parsing of %s failed\n", bedfile);
       return EXIT_FAILURE;
     }
     
@@ -176,7 +181,7 @@ int main(int argc, char *argv[])
 
       if (b->core.flag & BAM_FUNMAP) {
             if (sam_write1(out[unaln_idx], hdr, b) < 0) {
-              fprintf(stderr, "Error writing output.\n");
+              fprintf(stderr, "FATAL: Error writing output.\n");
               write_error = exit_code = 1;
             }        
       } else {
@@ -185,7 +190,7 @@ int main(int argc, char *argv[])
           int ovlp = spanOverlapsBED(b->core.tid, b->core.pos, bam_endpos(b), bedregions, &i);
           if (ovlp==1) {
             if (sam_write1(out[i], hdr, b) < 0) {
-              fprintf(stderr, "Error writing output.\n");
+              fprintf(stderr, "FATAL: Error writing output.\n");
               write_error = exit_code = 1;
             }
             break;/* since regions should be exclusive we can exit here */
@@ -202,7 +207,7 @@ int main(int argc, char *argv[])
     for (i=0; i<bedregions->n+1; i++) {
       r = sam_close(out[i]);
       if (r < 0) {
-        fprintf(stderr, "Error closing output.\n");
+        fprintf(stderr, "FATAL: Error closing output.\n");
         exit_code = 1;
       }
     }
@@ -212,7 +217,7 @@ int main(int argc, char *argv[])
     destroyBED(bedregions);
     r = sam_close(in);
     if (r < 0) {
-        fprintf(stderr, "Error closing input.\n");
+        fprintf(stderr, "FATAL: Error closing input.\n");
         exit_code = 1;
     }
 
